@@ -1,12 +1,12 @@
 #!/bin/bash
-echo -e "RBL ip checking"
 #/////////////////////////////////////////////////////////////////////////
-
+rm -rf /tmp/rbl.tmp 2> /dev/null
 Help() {
 echo "This binary is use to check the ip listed in RBL:"
 echo "help"
 echo "[i ----> ip]"
 echo "[f ----> file]"
+echo "[v ----> Version"
 }
 
 if [ -z $1 ];
@@ -14,21 +14,40 @@ then
 Help
 elif [ -n $1 ]
 then
-while getopts :i:f: FLAG; do
+while getopts :i:f:v FLAG; do
   case $FLAG in
     i)
       OPTERR=0
-      IP=$OPTARG
+      if [[ $OPTARG =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
+      then
+      echo "$OPTARG" > /tmp/rbl.tmp
+      chmod 1444 /tmp/rbl.tmp
+      else
+      echo "Enter the valid ip address"
+      fi
       ;;
-    #f)
-     # path=$OPTARG
-     # if [ -f $path ];
-     # then
-     # echo s
-     # else
-     # echo "Their is no such file are Directory"
-     # fi
-     #;;
+    f)
+      if [ -f $OPTARG ];
+      then
+         cat $OPTARG | while read ips;
+         do
+           if [[ $ips =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
+           then
+           echo $ips >> /tmp/rbl.tmp
+           chmod 1444 /tmp/rbl.tmp
+           else
+           echo "$ips is not an valid ip adddress."
+           exit 1
+           fi
+         done
+      else
+      echo "Their is no such file or Directory"
+      exit 1
+      fi
+     ;;
+     v)
+       echo " Version 1.00"
+      ;;
     \?)
       Help
       exit 1
@@ -236,22 +255,25 @@ domain[195]="zz.countries.nerd.dk"
 #/////////////////////////////////////////////////////////////////////////
 
 # ip check again rbl..
-for (( i=0; i<=0; i++ ))
+#for (( i=0; i<=0; i++ ))
+cat /tmp/rbl.tmp 2> /dev/null | while read IP;
 do
 #////////////////////////////////////////////////////
-
+#echo -e "\e[32m \e[1mChecking $IP ip in RBL... \e[0m {$domain[$j]}\r"
 fip=$(echo "$IP" | cut -d"." -f1)
 sip=$(echo "$IP" | cut -d"." -f2)
 tip=$(echo "$IP" | cut -d"." -f3)
 oip=$(echo "$IP" | cut -d"." -f4)
 revv=$(echo "$oip.$tip.$sip.$fip")
 #/////////////////////////////////////////////////////
+echo "############################################"
 for (( j=0; j<=195; j++ ))
 do
+echo -en "\e[32m \e[1mChecking $IP in RBL ${domain[$j]}..         \e[0m\r"
 ipcheck=$(dig +short $revv.${domain[$j]}|wc -l)
-if [ $ipcheck = 1 ];
+if [[ $ipcheck == 1 ]];
 then
-echo "IP $IP is Blacklisted in ${domain[$j]}"
+echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m"
 fi
 done
 done
