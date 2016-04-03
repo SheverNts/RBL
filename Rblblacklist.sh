@@ -252,14 +252,27 @@ domain[192]="work.drbl.gremlin.ru"
 domain[193]="zen.spamhaus.org"
 domain[194]="z.mailspike.net"
 domain[195]="zz.countries.nerd.dk"
+domain[196]="bl.tiopan.com"
+domain[197]="rbl.choon.net"
+domain[198]="rwl.choon.net"
+domain[199]="dnsbl.ahbl.org"
+domain[200]="dnsbl-2.uceprotect.net"
+domain[201]="dnsbl-3.uceprotect.net"
+domain[202]="bl.spamcannibal.org"
+domain[203]="db.wpbl.info"
+domain[204]="korea.services.net"
+domain[205]="dnsbl.inps.de"
+domain[206]="bl.shlink.org"
+domain[207]="wl.shlink.org"
+domain[208]="spamguard.leadmon.net"
+domain[209]="bl.nszones.com"
+domain[210]="list.quorum.to"
 #/////////////////////////////////////////////////////////////////////////
 
 # ip check again rbl..
-#for (( i=0; i<=0; i++ ))
 cat /tmp/rbl.tmp 2> /dev/null | while read IP;
 do
 #////////////////////////////////////////////////////
-#echo -e "\e[32m \e[1mChecking $IP ip in RBL... \e[0m {$domain[$j]}\r"
 fip=$(echo "$IP" | cut -d"." -f1)
 sip=$(echo "$IP" | cut -d"." -f2)
 tip=$(echo "$IP" | cut -d"." -f3)
@@ -267,13 +280,13 @@ oip=$(echo "$IP" | cut -d"." -f4)
 revv=$(echo "$oip.$tip.$sip.$fip")
 #/////////////////////////////////////////////////////
 echo "############################################"
-for (( j=0; j<=195; j++ ))
+for (( j=0; j<=210; j++ ))
 do
-echo -en "\e[32m \e[1mChecking $IP in RBL ${domain[$j]}..         \e[0m\r"
-ipcheck=$(dig +short $revv.${domain[$j]}|wc -l)
-if [[ $ipcheck == 1 ]];
+echo -en "\e[32m \e[1mChecking $IP in RBL ${domain[$j]}..              \e[0m\r"
+ipcheck=$(dig +short $revv.${domain[$j]})
+if [[ -n $ipcheck ]];
 then
-echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m"
+echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m" status code $ipcheck
 fi
 done
 done
