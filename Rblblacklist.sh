@@ -1,12 +1,14 @@
 #!/bin/bash
 #/////////////////////////////////////////////////////////////////////////
 rm -rf /tmp/rbl.tmp 2> /dev/null
+rm -rf /tmp/data.mail  && touch /tmp/data.mail && chmod 755 /tmp/data.mail
 Help() {
-echo "This binary is use to check the ip listed in RBL:"
 echo "help"
 echo "[i ----> ip]"
 echo "[f ----> file]"
-echo "[v ----> Version"
+echo "[v ----> Version]"
+echo "[m ----> mail]"
+echo "[h ----> help]"
 }
 
 if [ -z $1 ];
@@ -14,7 +16,7 @@ then
 Help
 elif [ -n $1 ]
 then
-while getopts :i:f:v FLAG; do
+while getopts :i:f:m:hA:v  FLAG; do
   case $FLAG in
     i)
       OPTERR=0
@@ -45,13 +47,26 @@ while getopts :i:f:v FLAG; do
       exit 1
       fi
      ;;
-     v)
+    m)
+      if [[ $OPTARG =  *@*.* ]]
+      then
+        mailid="$OPTARG"
+        mail=$(echo mail)
+      else
+        echo "enter the valid mail address..."
+      fi
+     ;;
+    v)
        echo " Version 1.00"
       ;;
     \?)
       Help
       exit 1
       ;;
+    h)
+      Help
+     exit 0
+     ;;
   esac
 done
 fi
@@ -286,8 +301,16 @@ echo -en "\e[32m \e[1mChecking $IP in RBL ${domain[$j]}..              \e[0m\r"
 ipcheck=$(dig +short $revv.${domain[$j]})
 if [[ -n $ipcheck ]];
 then
-echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m" status code $ipcheck
+echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m" status code $ipcheck | tee -a /tmp/data.mail
 fi
 done
 done
+if [[ mail ==  $mail  ]];
+then
+awk 'BEGIN {print "Your ip was listed in following RBL";}
+{print $2,$3,$4,$5,$6,$8,$9,$10;}
+{print "******************************************";}
+END {print "More detail about status code visit https://www.spamhaus.org/zen/"}' /tmp/data.mail | mailx -s "IP Blacklist" $mailid
+echo "Message was send to $mailid"
+fi
 #//////////////////////////////////////////////////////////////////////////
