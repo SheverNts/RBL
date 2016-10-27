@@ -314,4 +314,4 @@ END {print "More detail about status code visit https://www.spamhaus.org/zen/"}'
 echo "Message was send to $mailid"
 fi
 #//////////////////////////////////////////////////////////////////////////
-#end of script
+##################################################### end of script ############################################################
