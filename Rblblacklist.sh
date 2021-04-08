@@ -11,16 +11,16 @@ echo "[m ----> mail]"
 echo "[h ----> help]"
 }
 
-if [ -z $1 ];
+if [ -z "$1" ];
 then
 Help
-elif [ -n $1 ]
+elif [ -n "$1" ]
 then
 while getopts :i:f:m:hA:v  FLAG; do
   case $FLAG in
     i)
       OPTERR=0
-      if [[ $OPTARG =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
+      if [[ "$OPTARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
       then
       echo "$OPTARG" > /tmp/rbl.tmp
       chmod 1444 /tmp/rbl.tmp
@@ -29,13 +29,13 @@ while getopts :i:f:m:hA:v  FLAG; do
       fi
       ;;
     f)
-      if [ -f $OPTARG ];
+      if [ -f "$OPTARG" ];
       then
-         cat $OPTARG | while read ips;
+         cat "$OPTARG" | while read ips;
          do
-           if [[ $ips =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
+           if [[ "$ips" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
            then
-           echo $ips >> /tmp/rbl.tmp
+           echo "$ips" >> /tmp/rbl.tmp
            chmod 1444 /tmp/rbl.tmp
            else
            echo "$ips is not an valid ip adddress."
@@ -48,7 +48,7 @@ while getopts :i:f:m:hA:v  FLAG; do
       fi
      ;;
     m)
-      if [[ $OPTARG =  *@*.* ]]
+      if [[ "$OPTARG" =  *@*.* ]]
       then
         mailid="$OPTARG"
         mail=$(echo mail)
@@ -82,16 +82,16 @@ fip=$(echo "$IP" | cut -d"." -f1)
 sip=$(echo "$IP" | cut -d"." -f2)
 tip=$(echo "$IP" | cut -d"." -f3)
 oip=$(echo "$IP" | cut -d"." -f4)
-revv=$(echo "$oip.$tip.$sip.$fip")
+revv="$oip.$tip.$sip.$fip"
 #/////////////////////////////////////////////////////
 echo "############################################"
 for (( j=0; j<=210; j++ ))
 do
 echo -en "\e[32m \e[1mChecking $IP in RBL ${domain[$j]}..              \e[0m\r"
-ipcheck=$(dig +short $revv.${domain[$j]})
-if [[ -n $ipcheck ]];
+ipcheck=$(dig +short "$revv.${domain[$j]}")
+if [[ -n "$ipcheck" ]];
 then
-echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m" status code $ipcheck | tee -a /tmp/data.mail
+echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m" status code "$ipcheck" | tee -a /tmp/data.mail
 fi
 done
 done
