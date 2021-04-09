@@ -2,13 +2,13 @@
 
 RBL check script is use to check the ip is blacklisted on the list of DNSBL Servers.
 
-### What Is RBL?
+## What Is RBL?
 
 Realtime Blackhole List, a list of IP addresses whose owners refuse to stop the proliferation of spam. The RBL usually lists server IP addresses from ISPswhose customers are responsible for the spam and from ISPs whose servers are hijacked for spam relay.
 
-### Dependency
+## Dependency
  The dig command is the only one dependency to run the Rbl check
- To install dig in Redhat base OS 
+ To install dig in Redhat base OS
  ```bash
 dnf install bind-utils
  ```
@@ -17,7 +17,7 @@ dnf install bind-utils
 apt install dnsutils
  ```
 
-### Usage
+## Usage
 
 ```bash
 rbl_check
@@ -40,7 +40,7 @@ cat <<EOF >> ip_list.txt
 EOF
 rbl_check -f ip_list.txt
 ```
-### How to install?
+## How to install?
 ```bash
  git clone /tmp/rbl_check
  cp /tmp/rbl_check.sh /bin/rbl_check
