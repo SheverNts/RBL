@@ -1,83 +1,6 @@
 #!/bin/bash
-###################################################################
-#Script Name	:                                                                                              
-#Description	:                                                                                 
-#Args           	:                                                                                           
-#Author       	:                                               
-#Email         	:                                        
-###################################################################
-rm -rf /tmp/rbl.tmp 2> /dev/null
-rm -rf /tmp/data.mail  && touch /tmp/data.mail && chmod 755 /tmp/data.mail
-Help() {
-    printf "help\n"
-    printf "[i ----> ip]\n"
-    printf "[f ----> file]\n"
-    printf "[v ----> Version]\n"
-    printf "[m ----> mail]\n"
-    printf "[h ----> help]\n"
-}
-
-if [ -z "$1" ];
-then
-Help
-elif [ -n "$1" ]
-then
-while getopts :i:f:m:hA:v  FLAG; do
-  case $FLAG in
-    i)
-      OPTERR=0
-      if [[ "$OPTARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
-      then
-      echo "$OPTARG" > /tmp/rbl.tmp
-      chmod 1444 /tmp/rbl.tmp
-      else
-      echo "Enter the valid ip address"
-      fi
-      ;;
-    f)
-      if [ -f "$OPTARG" ];
-      then
-         cat "$OPTARG" | while read ips;
-         do
-           if [[ "$ips" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]
-           then
-           echo "$ips" >> /tmp/rbl.tmp
-           chmod 1444 /tmp/rbl.tmp
-           else
-           echo "$ips is not an valid ip adddress."
-           exit 1
-           fi
-         done
-      else
-      echo "Their is no such file or Directory"
-      exit 1
-      fi
-     ;;
-    m)
-      if [[ "$OPTARG" =  *@*.* ]]
-      then
-        mailid="$OPTARG"
-        mail=$(echo mail)
-      else
-        echo "enter the valid mail address..."
-      fi
-     ;;
-    v)
-       echo " Version 1.00"
-      ;;
-    \?)
-      Help
-      exit 1
-      ;;
-    h)
-      Help
-     exit 0
-     ;;
-  esac
-done
-fi
-
-domain=(0spam.fusionzero.com 0spam-killlist.fusionzero.com 
+#//////////////////////////////////////////////////////////////////////////
+domains=(0spam.fusionzero.com 0spam-killlist.fusionzero.com 
 0spamtrust.fusionzero.com access.redhawk.org accredit.habeas.com 
 all.dnsbl.bit.nl all.rbl.jp all.s5h.net all.spamrats.com 
 asn.routeviews.org aspath.routeviews.org aspews.ext.sorbs.net 
@@ -132,34 +55,76 @@ work.drbl.gremlin.ru zen.spamhaus.org z.mailspike.net zz.countries.nerd.dk
 bl.tiopan.com rbl.choon.net rwl.choon.net dnsbl.ahbl.org dnsbl-2.uceprotect.net 
 dnsbl-3.uceprotect.net bl.spamcannibal.org db.wpbl.info korea.services.net 
 dnsbl.inps.de bl.shlink.org wl.shlink.org spamguard.leadmon.net bl.nszones.com list.quorum.to)
-#/////////////////////////////////////////////////////////////////////////
+
+Version="1.0.0"
+#black list check help func
+Help() {
+    printf "help\n"
+    printf "[i ----> ip to check for blacklist]\n"
+    printf "[f ----> file with list of ip to check]\n"
+    printf "[v ----> version]\n"
+    printf "[m ----> send check result via email]\n"
+    printf "[h ----> help]\n"
+}
+
+[ -z "$1" ] && Help && exit 1
+while getopts :i:f:v  FLAG; do
+  case $FLAG in
+    i)
+      OPTERR=0
+      if [[ "$OPTARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]];then
+          IP_LIST=( "$OPTARG" )
+      else
+          echo "Enter the valid ip address.."
+          exit 1
+      fi
+      ;;
+    f)
+      if [ -f "$OPTARG" ]; then
+         IP_LIST=()
+         while read -r ips; do
+           if [[ "$ips" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              IP_LIST+=(${ips})
+           else
+              echo "$ips is not an valid ip adddress."
+              exit 1
+           fi
+         done < "$OPTARG"
+      else
+          echo "$OPTARG No such file or Directory"
+          exit 1
+      fi
+     ;;
+    v)
+       printf "${Version}\n"
+      ;;
+    \?)
+      Help
+      exit 1
+      ;;
+    :)
+      echo "Error: -${OPTARG} requires an argument."
+      Help
+      exit 1
+      ;;
+  esac
+done
+
 
 # ip check again rbl..
-while read IP; do
-    #////////////////////////////////////////////////////
-    fip=$(echo "$IP" | cut -d"." -f1)
-    sip=$(echo "$IP" | cut -d"." -f2)
-    tip=$(echo "$IP" | cut -d"." -f3)
-    oip=$(echo "$IP" | cut -d"." -f4)
-    revv="$oip.$tip.$sip.$fip"
-    #/////////////////////////////////////////////////////
-    echo "############################################"
-    for (( j=0; j<=210; j++ )); do
-        echo -en "\e[32m \e[1mChecking $IP in RBL ${domain[$j]}..              \e[0m\r"
-        ipcheck=$(dig +short "$revv.${domain[$j]}")
-        if [[ -n "$ipcheck" ]]; then
-           echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain[$j]} \e[0m" status code "$ipcheck" | tee -a /tmp/data.mail
-        fi
-    done
+for IP in ${IP_LIST[*]}; do
+  #////////////////////////////////////////////////////
+  revv=$(echo $IP| awk -F "." '{print $4"."$3"."$2"."$1}')
+  #/////////////////////////////////////////////////////
+  echo "############################################"
+  for domain in ${domains[*]}; do
+      echo -en "\e[32m \e[1mChecking IP $IP in RBL ${domain}...              \e[0m\r"
+      ipcheck=$(dig +short "$revv.${domain}")
+      if [[ -n "$ipcheck" ]]; then
+          echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain} \e[0m" status code "$ipcheck" | tee -a /tmp/data.mail
+      fi
+  done
 done < /tmp/rbl.tmp
 
-if [[ mail ==  $mail  ]];
-then
-    awk 'BEGIN {print "Your ip was listed in following RBL";}
-    {print $2,$3,$4,$5,$6,$8,$9,$10;}
-    {print "******************************************";}
-    END {print "More detail about status code visit https://www.spamhaus.org/zen/"}' /tmp/data.mail | mailx -s "IP Blacklist" $mailid
-    echo "Message was send to $mailid"
-fi
 #//////////////////////////////////////////////////////////////////////////
 ##################################################### end of script ############################################################
