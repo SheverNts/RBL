@@ -1,5 +1,19 @@
 #!/bin/bash
-#//////////////////////////////////////////////////////////////////////////
+#
+# Copyright 2022 
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 domains=(0spam.fusionzero.com 0spam-killlist.fusionzero.com 
 0spamtrust.fusionzero.com access.redhawk.org accredit.habeas.com 
 all.dnsbl.bit.nl all.rbl.jp all.s5h.net all.spamrats.com 
@@ -84,7 +98,7 @@ while getopts :i:f:v  FLAG; do
          IP_LIST=()
          while read -r ips; do
            if [[ "$ips" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              IP_LIST+=(${ips})
+              IP_LIST+=("$ips")
            else
               echo "$ips is not an valid ip adddress."
               exit 1
@@ -96,7 +110,7 @@ while getopts :i:f:v  FLAG; do
       fi
      ;;
     v)
-       printf "${Version}\n"
+       printf "%s\n" "${Version}"
       ;;
     \?)
       Help
@@ -114,7 +128,7 @@ done
 # ip check again rbl..
 for IP in ${IP_LIST[*]}; do
   #////////////////////////////////////////////////////
-  revv=$(echo $IP| awk -F "." '{print $4"."$3"."$2"."$1}')
+  revv=$(echo "$IP"| awk -F "." '{print $4"."$3"."$2"."$1}')
   #/////////////////////////////////////////////////////
   echo "############################################"
   for domain in ${domains[*]}; do
@@ -124,7 +138,7 @@ for IP in ${IP_LIST[*]}; do
           echo -e "\e[1m\e[31mIP $IP is Blacklisted in ${domain} \e[0m" status code "$ipcheck" | tee -a /tmp/data.mail
       fi
   done
-done < /tmp/rbl.tmp
+done
 
 #//////////////////////////////////////////////////////////////////////////
 ##################################################### end of script ############################################################
